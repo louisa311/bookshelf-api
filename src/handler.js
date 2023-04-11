@@ -1,3 +1,4 @@
+/* eslint-disable eqeqeq */
 const { nanoid } = require('nanoid');
 const books = require('./books');
 
@@ -64,12 +65,53 @@ const saveBookHandler = (request, h) => {
   return response;
 };
 
-const getAllBookHandler = () => ({
-  status: 'success',
-  data: {
-    books,
-  },
-});
+const getAllBookHandler = (request, h) => {
+  if (request.query.reading) {
+    const finished = request.query.reading == 1;
+    const bookList = books.filter((book) => book.reading === finished);
+    const response = h.response({
+      status: 'success',
+      data: {
+        books: bookList.map((book) => (
+          { id: book.id, name: book.name, publisher: book.publisher })),
+      },
+    }).code(200);
+    return response;
+  } if (request.query.finished) {
+    const finished = request.query.finished == 1;
+    const bookList = books.filter((book) => book.finished === finished);
+    const response = h.response({
+      status: 'success',
+      data: {
+        books: bookList.map((book) => (
+          { id: book.id, name: book.name, publisher: book.publisher })),
+      },
+    }).code(200);
+    return response;
+  } if (request.query.name) {
+    const bookList = books.filter(
+      (book) => book.name.toLowerCase().includes(request.query.name.toLowerCase()),
+    );
+    const response = h.response({
+      status: 'success',
+      data: {
+        books: bookList.map((book) => (
+          { id: book.id, name: book.name, publisher: book.publisher })),
+      },
+    }).code(200);
+    return response;
+  }
+  const response = h.response({
+    status: 'success',
+    data: {
+      books: books.map((book) => (
+        {
+          id: book.id, name: book.name, publisher: book.publisher,
+        })),
+    },
+  }).code(200);
+  return response;
+};
 
 const getBookByIdHandler = (request, h) => {
   const { id } = request.params;
@@ -129,7 +171,7 @@ const editBookByIdHandler = (request, h) => {
   if (!name || name.trim() === '') {
     const response = h.response({
       status: 'fail',
-      message: 'Gagal menambahkan buku. Mohon isi nama buku',
+      message: 'Gagal memperbarui buku. Mohon isi nama buku',
     }).code(400);
     return response;
   }
@@ -137,7 +179,7 @@ const editBookByIdHandler = (request, h) => {
   if (readPage > pageCount) {
     const response = h.response({
       status: 'fail',
-      message: 'Gagal menambahkan buku. readPage tidak boleh lebih besar dari pageCount',
+      message: 'Gagal memperbarui buku. readPage tidak boleh lebih besar dari pageCount',
     }).code(400);
     return response;
   }
